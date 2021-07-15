@@ -18,7 +18,7 @@ void fill_audio(void *udata, Uint8 *stream, int len)
   tone *tone = udata;
   for(int i=0; i<len; i++)
   {
-    stream[i]=round((sin(tone->phase)+1)*255);
+    stream[i]=round((sin(tone->phase)+1)*127);
     tone->phase += (TAU/SAMPLE_RATE) * tone->frequency;
   }
   /* Wrap phase to stop it from growing uncontrollably */
