@@ -1,5 +1,5 @@
 C=gcc
-CFLAGS=-Isrc -std=c99 -Wall -Wextra -pedantic -Ofast -lm -lSDL
+CFLAGS=-Isrc -std=c11 -Wall -Wextra -pedantic -Ofast -lm -lSDL -pthread
 PROJNAME=squeaker
 
 all: bin/$(PROJNAME)
