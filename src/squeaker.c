@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <math.h>
+#define SDL_MAIN_HANDLED
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_mutex.h>
 
@@ -19,7 +20,7 @@ void fill_audio(void *udata, Uint8 *stream, int len)
   for(int i=0; i<len; i++)
   {
     /* sine wave fitted into Uint8 */
-    stream[i]=round((sin(tone->phase)+1)*127); 
+    stream[i]=round((sin(tone->phase)+1)*127);
     /* Time step */
     SDL_LockMutex(tone->mtx);
     tone->phase += (TAU/SAMPLE_RATE) * tone->frequency;
@@ -31,6 +32,8 @@ void fill_audio(void *udata, Uint8 *stream, int len)
 
 int main()
 {
+  SDL_SetMainReady();
+  SDL_Init(SDL_INIT_AUDIO);
   SDL_mutex *mtx;
   if(!(mtx = SDL_CreateMutex()))
   {
