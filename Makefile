@@ -6,6 +6,7 @@ all: bin/$(PROJNAME)
 	rm bin/*.o
 
 bin/%.o: src/%.c
+	mkdir -p bin
 	$(CC) $(CFLAGS) -c $< -o $@
 
 bin/$(PROJNAME): bin/$(PROJNAME).o
