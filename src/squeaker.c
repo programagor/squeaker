@@ -20,13 +20,16 @@ typedef struct
 void fill_audio(void *udata, Uint8 *stream, int len)
 {
   tone *tone = udata;
-  for(int i=0; i<len; i++)
+  for(int i=0; i<len; i+=4)
   {
     /* Time step */
     SDL_LockMutex(tone->mtx);
     {
-      /* sine wave fitted into Uint8 */
-      stream[i]=round((sin(tone->phase)+1)*127);
+      /* sine wave */
+      float sample = sin(tone->phase);
+      /* written byte by byte */
+      Uint8* sample_byte = (Uint8*) &sample;
+      for(int j=0; j<4; j++) stream[i+j] = sample_byte[j];
       /* Update frequency */
       if(tone->portamento)
       {
@@ -63,7 +66,7 @@ int main(int argc, const char *argv[])
     fprintf(stderr, "Couldn't initialise mutex\n");
     return(-1);
   }
-  tone tone = 
+  tone tone =
   {
     .freq = 0.0,
     .new_freq = 0.0,
@@ -77,7 +80,7 @@ int main(int argc, const char *argv[])
   }
   SDL_AudioSpec audio;
   audio.freq = SAMPLE_RATE;
-  audio.format = AUDIO_U8; /* Unsigned 8-bit int */
+  audio.format = AUDIO_F32SYS; /* 32-bit float */
   audio.channels = 1; /* Mono */
   audio.samples = 1024;
   audio.callback = fill_audio;
