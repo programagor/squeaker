@@ -6,7 +6,8 @@
 
 #define TAU 6.28318530717958647692528676655900576839433879875 /* 2*PI */
 #define SAMPLE_RATE 44100
-#define INPUT_LOWPASS 0.01
+#define INPUT_LOWPASS 1e-2
+#define MIN_FREQ 1e-4
 
 typedef struct
 {
@@ -30,7 +31,7 @@ void fill_audio(void *udata, Uint8 *stream, int len)
       /* written byte by byte */
       for(int j=0; j<4; j++) stream[i+j] = ((Uint8*) &sample)[j];
       /* Update frequency */
-      if(tone->input_lowpass)
+      if(tone->input_lowpass >= MIN_FREQ)
       {
         /* Slide from current frequency to new frequency.
          * This implements simple P controller, with asymptotic behaviour.
@@ -71,8 +72,8 @@ int main(int argc, const char *argv[])
   }
   tone tone =
   {
-    .freq = 1e-6,
-    .new_freq = 1e-6,
+    .freq = MIN_FREQ,
+    .new_freq = MIN_FREQ,
     .phase = 0.0,
     .input_lowpass = INPUT_LOWPASS,
     .mtx = mtx
@@ -110,7 +111,8 @@ int main(int argc, const char *argv[])
     if(!scanf("%lf",&new_freq)){
       continuing = 0;
     };
-    if(new_freq < 1e-6) new_freq = 1e-6; /* Prevents -inf on log scale */
+    /* Clamp input, to prevent aliasing and -inf in log scale */
+    new_freq = fmax( MIN_FREQ , fmin( new_freq , SAMPLE_RATE/2 ));
     if(tone.new_freq != new_freq)
     {
       SDL_LockMutex(mtx);
