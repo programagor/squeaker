@@ -6,14 +6,14 @@
 
 #define TAU 6.28318530717958647692528676655900576839433879875 /* 2*PI */
 #define SAMPLE_RATE 44100
-#define PORTAMENTO 0.1
+#define INPUT_LOWPASS 0.05
 
 typedef struct
 {
   double freq;
   double new_freq;
   double phase;
-  double portamento;
+  double input_lowpass;
   SDL_mutex *mtx;
 } tone;
 
@@ -28,19 +28,23 @@ void fill_audio(void *udata, Uint8 *stream, int len)
       /* sine wave */
       float sample = sin(tone->phase);
       /* written byte by byte */
-      Uint8* sample_byte = (Uint8*) &sample;
-      for(int j=0; j<4; j++) stream[i+j] = sample_byte[j];
+      for(int j=0; j<4; j++) stream[i+j] = ((Uint8*) &sample)[j];
       /* Update frequency */
-      if(tone->portamento)
+      if(tone->input_lowpass)
       {
         /* Slide from current frequency to new frequency.
          * This implements simple P controller, with asymptotic behaviour.
+         * Do calculation in logarithmic scape.
          */
-        tone->freq+=(tone->new_freq-tone->freq)/(SAMPLE_RATE*tone->portamento);
+        double new = log(tone->new_freq);
+        double old = log(tone->freq);
+        old+=(new-old)/(SAMPLE_RATE*tone->input_lowpass);
+        tone->freq = exp(old);
+        //printf("%lf\n",tone->freq);
       }
       else
       {
-        /* If portamento is 0, jump straight to new frequency */
+        /* If input lowpass is 0, jump straight to new frequency */
         tone->freq = tone->new_freq;
       }
       /* Update phase */
@@ -68,21 +72,21 @@ int main(int argc, const char *argv[])
   }
   tone tone =
   {
-    .freq = 0.0,
-    .new_freq = 0.0,
+    .freq = 1e-6,
+    .new_freq = 1e-6,
     .phase = 0.0,
-    .portamento = PORTAMENTO,
+    .input_lowpass = INPUT_LOWPASS,
     .mtx = mtx
   };
   if(argc==2)
   {
-    sscanf(argv[1],"%lf",&(tone.portamento));
+    sscanf(argv[1],"%lf",&(tone.input_lowpass));
   }
   SDL_AudioSpec audio;
   audio.freq = SAMPLE_RATE;
   audio.format = AUDIO_F32SYS; /* 32-bit float */
   audio.channels = 1; /* Mono */
-  audio.samples = 1024;
+  audio.samples = 512;
   audio.callback = fill_audio;
   audio.userdata = &tone;
   if(SDL_OpenAudio(&audio, NULL) != 0)
@@ -100,6 +104,7 @@ int main(int argc, const char *argv[])
     if(!scanf("%lf",&new_freq)){
       continuing = 0;
     };
+    if(new_freq < 1e-6) new_freq = 1e-6; /* Prevents -inf on log scale */
     if(tone.new_freq != new_freq)
     {
       SDL_LockMutex(mtx);
