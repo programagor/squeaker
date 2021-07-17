@@ -58,6 +58,10 @@ void fill_audio(void *udata, Uint8 *stream, int len)
 
 int main(int argc, const char *argv[])
 {
+  if (sizeof(float) != 4)
+  {
+    fputs("This platform does not support 32-bit floats.\n",stderr);
+  }
   SDL_SetMainReady();
   if(SDL_Init(SDL_INIT_AUDIO) != 0)
   {
@@ -104,13 +108,9 @@ int main(int argc, const char *argv[])
   SDL_PauseAudio(0); // Start playing
   /* Continuously read new floats from STDIN,
    * quit if something other than float is read */
-  int continuing = 1;
   double new_freq;
-  while(continuing)
+  while(scanf("%lf",&new_freq))
   {
-    if(!scanf("%lf",&new_freq)){
-      continuing = 0;
-    };
     /* Clamp input, to prevent aliasing and -inf in log scale */
     new_freq = fmax( MIN_FREQ , fmin( new_freq , SAMPLE_RATE/2 ));
     if(tone.new_freq != new_freq)
