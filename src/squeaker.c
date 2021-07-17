@@ -6,7 +6,7 @@
 
 #define TAU 6.28318530717958647692528676655900576839433879875 /* 2*PI */
 #define SAMPLE_RATE 44100
-#define INPUT_LOWPASS 0.05
+#define INPUT_LOWPASS 0.01
 
 typedef struct
 {
@@ -40,7 +40,6 @@ void fill_audio(void *udata, Uint8 *stream, int len)
         double old = log(tone->freq);
         old+=(new-old)/(SAMPLE_RATE*tone->input_lowpass);
         tone->freq = exp(old);
-        //printf("%lf\n",tone->freq);
       }
       else
       {
@@ -78,9 +77,16 @@ int main(int argc, const char *argv[])
     .input_lowpass = INPUT_LOWPASS,
     .mtx = mtx
   };
-  if(argc==2)
+  if(argc>1)
   {
-    sscanf(argv[1],"%lf",&(tone.input_lowpass));
+    if(!sscanf(argv[1],"%lf",&(tone.input_lowpass)))
+    {
+      fprintf(stderr,"Usage: %s [lowpass=0.01]\n\n",argv[0]);
+      fputs("lowpass specifies how fast the sound reacts to input\n", stderr);
+      fputs("        Higher values mean slower reactions\n", stderr);
+      fputs("        0 means instantaneous transitions\n", stderr);
+      return(-1);
+    }
   }
   SDL_AudioSpec audio;
   audio.freq = SAMPLE_RATE;
