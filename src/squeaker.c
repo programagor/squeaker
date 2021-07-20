@@ -25,33 +25,31 @@ void fill_audio(void *udata, Uint8 *stream, int len)
   for(int i=0; i<len; i+=4)
   {
     /* Time step */
-    SDL_LockMutex(tone->mtx);
+    /* sine wave */
+    Sint32 sample = lround(sin(tone->phase)*SDL_MAX_SINT32);
+    /* written byte by byte */
+    for(int j=0; j<4; j++) stream[i+j] = ((Uint8*) &sample)[j];
+    /* Update frequency */
+    if(tone->input_lowpass >= MIN_INPUT_LOWPASS)
     {
-      /* sine wave */
-      Sint32 sample = lround(sin(tone->phase)*SDL_MAX_SINT32);
-      /* written byte by byte */
-      for(int j=0; j<4; j++) stream[i+j] = ((Uint8*) &sample)[j];
-      /* Update frequency */
-      if(tone->input_lowpass >= MIN_INPUT_LOWPASS)
-      {
-        /* Slide from current frequency to new frequency.
-         * This implements simple P controller, with asymptotic behaviour.
-         * Do calculation in logarithmic scape.
-         */
+      /* Slide from current frequency to new frequency.
+       * This implements simple P controller, with asymptotic behaviour.
+       * Do calculation in logarithmic scape.
+       */
+      SDL_LockMutex(tone->mtx);
         double new = log(tone->new_freq);
-        double old = log(tone->freq);
-        old+=(new-old)/(SAMPLE_RATE*tone->input_lowpass);
-        tone->freq = exp(old);
-      }
-      else
-      {
-        /* If input lowpass is 0, jump straight to new frequency */
-        tone->freq = tone->new_freq;
-      }
-      /* Update phase */
-      tone->phase += (TAU/SAMPLE_RATE) * tone->freq;
+      SDL_UnlockMutex(tone->mtx);
+      double old = log(tone->freq);
+      old+=(new-old)/(SAMPLE_RATE*tone->input_lowpass);
+      tone->freq = exp(old);
     }
-    SDL_UnlockMutex(tone->mtx);
+    else
+    {
+      /* If input lowpass is 0, jump straight to new frequency */
+      tone->freq = tone->new_freq;
+    }
+    /* Update phase */
+    tone->phase += (TAU/SAMPLE_RATE) * tone->freq;
   }
   /* Wrap phase to stop it from growing uncontrollably */
   tone->phase = fmod(tone->phase,TAU);
@@ -113,9 +111,7 @@ int main(int argc, const char *argv[])
     if(tone.new_freq != new_freq)
     {
       SDL_LockMutex(mtx);
-      {
         tone.new_freq = new_freq;
-      }
       SDL_UnlockMutex(mtx);
     }
   }
