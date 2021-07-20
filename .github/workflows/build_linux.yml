@@ -18,8 +18,10 @@ jobs:
       uses: actions/checkout@v2
     - name: make
       run: make
+    - name: Compress output
+      run: mkdir -p squeaker-linux && cp bin/squeaker squeaker-linux && tar -czvf squeaker-linux.tar.gz squeaker-linux
     - name: Upload a Build Artifact
       uses: actions/upload-artifact@v2
       with:
-        name: squeaker_linux
-        path: src/squeaker
+        name: squeaker-linux.tar.gz
+        path: squeaker-linux.tar.gz
