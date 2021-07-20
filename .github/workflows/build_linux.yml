@@ -31,7 +31,14 @@ jobs:
     - name: Add MSBuild to PATH
       uses: microsoft/setup-msbuild@v1.0.2
     - name: prepare vcpkg
-      run: git clone https://github.com/Microsoft/vcpkg.git && .\vcpkg\bootstrap-vcpkg.bat && cd vcpkg && .\vcpkg install sdl2 && .\vcpkg integrate install
+      run: git clone https://github.com/Microsoft/vcpkg.git && .\vcpkg\bootstrap-vcpkg.bat -disableMetrics && cd vcpkg && .\vcpkg install sdl2 && .\vcpkg integrate install
     - name: Build
       working-directory: ${{env.GITHUB_WORKSPACE}}
       run: msbuild /m /p:Configuration=Release
+    - name: Compress output
+      run: mkdir squeaker-win && cp bin\squeaker.exe squeaker-win && cp bin\SDL2.dll squeaker-win
+    - name: Upload a Build Artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: squeaker-win
+        path: squeaker-win
