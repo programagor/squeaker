@@ -7,10 +7,10 @@ all: bin/$(PROJNAME)
 
 bin/%.o: src/%.c
 	mkdir -p bin
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) -c $< -o $@ $(CFLAGS)
 
 bin/$(PROJNAME): bin/$(PROJNAME).o
-	$(CC) $(CFLAGS) $^ -o $@
+	$(CC) $^ -o $@ $(CFLAGS) 
 
 clean:
 	rm -rf bin/*
