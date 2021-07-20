@@ -40,5 +40,5 @@ jobs:
     - name: Upload a Build Artifact
       uses: actions/upload-artifact@v2
       with:
-        name: squeaker-win
-        path: squeaker-win
+        name: squeaker-win.tar.gz
+        path: squeaker-win.tar.gz
