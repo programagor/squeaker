@@ -27,7 +27,7 @@ void fill_audio(void *udata, Uint8 *stream, int len)
     SDL_LockMutex(tone->mtx);
     {
       /* sine wave */
-      float sample = sin(tone->phase);
+      Sint32 sample = lround(sin(tone->phase)*SDL_MAX_SINT32);
       /* written byte by byte */
       for(int j=0; j<4; j++) stream[i+j] = ((Uint8*) &sample)[j];
       /* Update frequency */
@@ -95,7 +95,7 @@ int main(int argc, const char *argv[])
   }
   SDL_AudioSpec audio;
   audio.freq = SAMPLE_RATE;
-  audio.format = AUDIO_F32SYS; /* 32-bit float */
+  audio.format = AUDIO_S32SYS; /* 32-bit signed int */
   audio.channels = 1; /* Mono */
   audio.samples = 512;
   audio.callback = fill_audio;
