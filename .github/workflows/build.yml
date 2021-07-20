@@ -1,0 +1,44 @@
+name: Build C project
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build_linux:
+    runs-on: ubuntu-18.04
+    steps:
+    - name: Install libsdl2-dev
+      run: sudo apt-get install libsdl2-dev
+    - name: Checkout repo
+      uses: actions/checkout@v2
+    - name: make
+      run: make
+    - name: Compress output
+      run: mkdir -p squeaker-linux && cp bin/squeaker squeaker-linux && tar -czvf squeaker-linux.tar.gz squeaker-linux
+    - name: Upload a Build Artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: squeaker-linux.tar.gz
+        path: squeaker-linux.tar.gz
+  build_windows:
+    runs-on: windows-2019
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v2
+    - name: Add MSBuild to PATH
+      uses: microsoft/setup-msbuild@v1.0.2
+    - name: prepare vcpkg
+      run: git clone https://github.com/Microsoft/vcpkg.git && .\vcpkg\bootstrap-vcpkg.bat -disableMetrics && cd vcpkg && .\vcpkg install sdl2 && .\vcpkg integrate install
+    - name: Build
+      working-directory: ${{env.GITHUB_WORKSPACE}}
+      run: msbuild /m /p:Configuration=Release
+    - name: Compress output
+      run: mkdir squeaker-win && cp bin\squeaker.exe squeaker-win && cp bin\SDL2.dll squeaker-win && tar -czvf squeaker-win.tar.gz squeaker-win
+    - name: Upload a Build Artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: squeaker-win.tar.gz
+        path: squeaker-win.tar.gz
