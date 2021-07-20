@@ -58,10 +58,6 @@ void fill_audio(void *udata, Uint8 *stream, int len)
 
 int main(int argc, const char *argv[])
 {
-  if (sizeof(float) != 4)
-  {
-    fputs("This platform does not support 32-bit floats.\n",stderr);
-  }
   SDL_SetMainReady();
   if(SDL_Init(SDL_INIT_AUDIO) != 0)
   {
