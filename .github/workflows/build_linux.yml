@@ -1,0 +1,25 @@
+name: C/C++ CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Install libsdl2-dev
+      run: sudo apt-get install libsdl2-dev
+    - name: Checkout repo
+      uses: actions/checkout@v2
+    - name: make
+      run: make
+    - name: Upload a Build Artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: squeaker_linux
+        path: src/squeaker
