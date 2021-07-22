@@ -36,7 +36,7 @@ jobs:
       working-directory: ${{env.GITHUB_WORKSPACE}}
       run: msbuild /m /p:Configuration=Release
     - name: Compress output
-      run: mkdir squeaker-win && cp bin\* squeaker-win && tar -czvf squeaker-win.tar.gz squeaker-win
+      run: mkdir squeaker-win && cp bin\squeaker.exe,bin\SDL2.dll squeaker-win && tar -czvf squeaker-win.tar.gz squeaker-win
     - name: Upload a Build Artifact
       uses: actions/upload-artifact@v2
       with:
