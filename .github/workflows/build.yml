@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-18.04
     steps:
     - name: Install libsdl2-dev
-      run: sudo apt-get update && sudo apt-get install libsdl2-dev
+      run: sudo apt-get update && sudo apt-get install -y --no-install-recommends libsdl2-dev
     - name: Checkout repo
       uses: actions/checkout@v2
     - name: make
