@@ -14,9 +14,9 @@ typedef struct
 {
   double freq;
   double new_freq;
+  SDL_mutex *new_freq_mtx;
   double phase;
   double input_lowpass;
-  SDL_mutex *mtx;
 } tone;
 
 void fill_audio(void *udata, Uint8 *stream, int len)
@@ -36,9 +36,9 @@ void fill_audio(void *udata, Uint8 *stream, int len)
        * This implements simple P controller, with asymptotic behaviour.
        * Do calculation in logarithmic scape.
        */
-      SDL_LockMutex(tone->mtx);
+      SDL_LockMutex(tone->new_freq_mtx);
         double new = log(tone->new_freq);
-      SDL_UnlockMutex(tone->mtx);
+      SDL_UnlockMutex(tone->input_freq_mtx);
       double old = log(tone->freq);
       old+=(new-old)/(SAMPLE_RATE*tone->input_lowpass);
       tone->freq = exp(old);
@@ -46,7 +46,9 @@ void fill_audio(void *udata, Uint8 *stream, int len)
     else
     {
       /* If input lowpass is 0, jump straight to new frequency */
-      tone->freq = tone->new_freq;
+      SDL_LockMutex(tone->new_freq_mtx);
+        tone->freq = tone->new_freq;
+      SDL_UnlockMutex(tone->new_freq_mtx);
     }
     /* Update phase */
     tone->phase += (TAU/SAMPLE_RATE) * tone->freq;
@@ -63,8 +65,8 @@ int main(int argc, const char *argv[])
     fprintf(stderr,"Unable to initialize SDL: %s", SDL_GetError());
     return(-1);
   }
-  SDL_mutex *mtx;
-  if(!(mtx = SDL_CreateMutex()))
+  SDL_mutex *new_freq_mtx = SDL_CreateMutex();
+  if(!new_freq_mtx)
   {
     fprintf(stderr, "Couldn't initialise mutex\n");
     return(-1);
@@ -75,7 +77,7 @@ int main(int argc, const char *argv[])
     .new_freq = MIN_FREQ,
     .phase = 0.0,
     .input_lowpass = INPUT_LOWPASS,
-    .mtx = mtx
+    .new_freq_mtx = new_freq_mtx
   };
   if(argc>1)
   {
@@ -110,14 +112,14 @@ int main(int argc, const char *argv[])
     new_freq = fmax( MIN_FREQ , fmin( new_freq , SAMPLE_RATE/2 ));
     if(tone.new_freq != new_freq)
     {
-      SDL_LockMutex(mtx);
+      SDL_LockMutex(new_freq_mtx);
         tone.new_freq = new_freq;
-      SDL_UnlockMutex(mtx);
+      SDL_UnlockMutex(new_freq_mtx);
     }
   }
   /* scanf didn't detect float, quitting */
   SDL_CloseAudio();
-  SDL_DestroyMutex(mtx);
+  SDL_DestroyMutex(new_freq_mtx);
   SDL_Quit();
   return(0);
 }
