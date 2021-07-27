@@ -38,7 +38,7 @@ void fill_audio(void *udata, Uint8 *stream, int len)
        */
       SDL_LockMutex(tone->new_freq_mtx);
         double new = log(tone->new_freq);
-      SDL_UnlockMutex(tone->input_freq_mtx);
+      SDL_UnlockMutex(tone->new_freq_mtx);
       double old = log(tone->freq);
       old+=(new-old)/(SAMPLE_RATE*tone->input_lowpass);
       tone->freq = exp(old);
